@@ -1,0 +1,89 @@
+package ruh_internship_portal_backend.example.ruh_internship_portal_backend.service.Impl;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.dto.DailyDiaryUpdateDTO;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.entity.DailyDiaryUpdate;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.repo.DailyDiaryUpdateRepo;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+
+@ExtendWith(MockitoExtension.class)
+public class DailyDiaryUpdateImplTest {
+
+    @Mock
+    private DailyDiaryUpdateRepo dailyDiaryUpdateRepo;
+
+    @InjectMocks
+    private ruh_internship_portal_backend.example.ruh_internship_portal_backend.service.Impl.DailyDiaryUpdate dailyDiaryUpdateService;
+
+    private DailyDiaryUpdateDTO dailyDiaryUpdateDTO;
+    private DailyDiaryUpdate dailyDiaryUpdate;
+
+    @BeforeEach
+    public void setUp() {
+        dailyDiaryUpdateDTO = new DailyDiaryUpdateDTO();
+        dailyDiaryUpdateDTO.setId(1L); // Assuming Long type for ID
+        dailyDiaryUpdateDTO.setSc_number("SC123");
+        dailyDiaryUpdateDTO.setDate(Date.from(LocalDateTime.of(2023, 1, 1, 0, 0)
+                .atZone(ZoneId.systemDefault()).toInstant())); // Convert LocalDateTime to Date
+        dailyDiaryUpdateDTO.setNotes("Initial notes");
+        dailyDiaryUpdateDTO.setSubmittedAt(LocalDateTime.now()); // Keep LocalDateTime
+
+        dailyDiaryUpdate = new DailyDiaryUpdate(
+                dailyDiaryUpdateDTO.getId(),
+                dailyDiaryUpdateDTO.getSc_number(),
+                dailyDiaryUpdateDTO.getDate(),
+                dailyDiaryUpdateDTO.getNotes(),
+                dailyDiaryUpdateDTO.getSubmittedAt()
+        );
+    }
+
+    @Test
+    public void testSaveDailyDiaryUpdate_Success() {
+        // Act
+        String result = dailyDiaryUpdateService.saveDailyDiaryUpdate(dailyDiaryUpdateDTO);
+
+        // Assert
+        verify(dailyDiaryUpdateRepo).save(any(DailyDiaryUpdate.class));
+        assertEquals("Daily diary update saved successfully.", result);
+    }
+
+    @Test
+    public void testUpdateDailyDiaryUpdate_Success() {
+        // Arrange
+        when(dailyDiaryUpdateRepo.existsById(dailyDiaryUpdateDTO.getId())).thenReturn(true);
+        when(dailyDiaryUpdateRepo.getReferenceById(dailyDiaryUpdateDTO.getId())).thenReturn(dailyDiaryUpdate);
+
+        // Act
+        String result = dailyDiaryUpdateService.updateDailyDiaryUpdate(dailyDiaryUpdateDTO);
+
+        // Assert
+        verify(dailyDiaryUpdateRepo).save(dailyDiaryUpdate);
+        assertEquals("SC123 note updated successfully.", result);
+    }
+
+    @Test
+    public void testUpdateDailyDiaryUpdate_NotFound() {
+        // Arrange
+        when(dailyDiaryUpdateRepo.existsById(dailyDiaryUpdateDTO.getId())).thenReturn(false);
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            dailyDiaryUpdateService.updateDailyDiaryUpdate(dailyDiaryUpdateDTO);
+        });
+
+        assertEquals("DailyDiaryUpdate not found", exception.getMessage());
+        verify(dailyDiaryUpdateRepo, never()).save(any());
+    }
+}

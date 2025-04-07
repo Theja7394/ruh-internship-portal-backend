@@ -1,0 +1,55 @@
+package ruh_internship_portal_backend.example.ruh_internship_portal_backend.service.Impl;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.dto.FeedbackDTO;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.dto.request.FeedbackUpdateDTO;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.entity.Feedback;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.repo.FeedbackRepo;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.service.FeedbackService;
+
+import java.util.List;
+
+@Service
+public class FeedbackImpl implements FeedbackService {
+    @Autowired
+    private FeedbackRepo feedbackRepo;
+
+
+    @Override
+    public String saveFeedback(FeedbackDTO feedbackDTO) {
+        Feedback feedback = new Feedback(
+                feedbackDTO.getFeedback_id(),
+                feedbackDTO.getSc_number(),
+                feedbackDTO.getCompany_name(),
+                feedbackDTO.getFeedback()
+        );
+        feedbackRepo.save(feedback);
+        return "save";
+    }
+
+    @Override
+    public String updateFeedback(FeedbackUpdateDTO feedbackUpdateDTO) {
+        if(feedbackRepo.existsById(feedbackUpdateDTO.getFeedback_id())){
+            Feedback feedback = feedbackRepo.getReferenceById(feedbackUpdateDTO.getFeedback_id());
+            feedback.setFeedback(feedbackUpdateDTO.getFeedback());
+            feedbackRepo.save(feedback);
+            return feedbackUpdateDTO.getFeedback() + " updated successfully";
+
+        }else{
+            throw new RuntimeException("Feedback not found");
+        }
+    }
+    @Override
+    public List<Feedback> getAllFeedback() {
+        return feedbackRepo.findAll();
+    }
+    @Override
+    public List<Feedback> findByScNumber(String scNumber) {
+        List<Feedback> result = feedbackRepo.findByScNumberIgnoreCase(scNumber); // Case-insensitive
+        if (result.isEmpty()) {
+            System.out.println("No feedback found for SC Number: " + scNumber);
+        }
+        return result;
+    }
+}

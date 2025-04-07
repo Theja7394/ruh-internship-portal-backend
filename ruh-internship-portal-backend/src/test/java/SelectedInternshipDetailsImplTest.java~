@@ -1,0 +1,104 @@
+package ruh_internship_portal_backend.example.ruh_internship_portal_backend.service.Impl;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.dto.SelectedInternshipDetailsDTO;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.entity.SelectedInternshipDetails;
+import ruh_internship_portal_backend.example.ruh_internship_portal_backend.repo.SelectedInternshipDetailsRepo;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+@ExtendWith(MockitoExtension.class)
+public class SelectedInternshipDetailsImplTest {
+
+    @Mock
+    private SelectedInternshipDetailsRepo selectedInternshipDetailsRepo;
+
+    @InjectMocks
+    private SelectedInternshipDetailsImpl selectedInternshipDetailsService;
+
+    private SelectedInternshipDetailsDTO selectedInternshipDetailsDTO;
+    private SelectedInternshipDetails selectedInternshipDetails;
+
+    @BeforeEach
+    public void setUp() throws ParseException {
+        selectedInternshipDetailsDTO = new SelectedInternshipDetailsDTO();
+        selectedInternshipDetailsDTO.setSelection_id(1); // Assuming int type
+        selectedInternshipDetailsDTO.setSc_number("SC123");
+        selectedInternshipDetailsDTO.setEmail("test@example.com");
+        selectedInternshipDetailsDTO.setPhoneNumber("1234567890");
+        selectedInternshipDetailsDTO.setCompany("Company A");
+        selectedInternshipDetailsDTO.setDesignation("Intern");
+        selectedInternshipDetailsDTO.setAppointment_letter_pdf("path/to/pdf");
+
+        // Parse the date strings into Date objects
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date startDate = dateFormat.parse("2023-01-01");
+        Date endDate = dateFormat.parse("2023-06-01");
+
+        selectedInternshipDetailsDTO.setStart_date(startDate);
+        selectedInternshipDetailsDTO.setEnd_date(endDate);
+        selectedInternshipDetailsDTO.setSupervisor_name("John Doe");
+
+        selectedInternshipDetails = new SelectedInternshipDetails(
+                selectedInternshipDetailsDTO.getSelection_id(),
+                selectedInternshipDetailsDTO.getSc_number(),
+                selectedInternshipDetailsDTO.getEmail(),
+                selectedInternshipDetailsDTO.getPhoneNumber(),
+                selectedInternshipDetailsDTO.getCompany(),
+                selectedInternshipDetailsDTO.getDesignation(),
+                selectedInternshipDetailsDTO.getAppointment_letter_pdf(),
+                selectedInternshipDetailsDTO.getStart_date(),
+                selectedInternshipDetailsDTO.getEnd_date(),
+                selectedInternshipDetailsDTO.getSupervisor_name()
+        );
+    }
+
+    @Test
+    public void testGetSelectedInternshipDetails_Success() {
+        // Act
+        String result = selectedInternshipDetailsService.getSelectedInternshipDetails(selectedInternshipDetailsDTO);
+
+        // Assert
+        verify(selectedInternshipDetailsRepo).save(any(SelectedInternshipDetails.class));
+        assertEquals("save", result);
+    }
+
+    @Test
+    public void testUpdateSelectedInternshipDetails_Success() {
+        // Arrange
+        when(selectedInternshipDetailsRepo.existsById(selectedInternshipDetailsDTO.getSelection_id())).thenReturn(true);
+        when(selectedInternshipDetailsRepo.getReferenceById(selectedInternshipDetailsDTO.getSelection_id())).thenReturn(selectedInternshipDetails);
+
+        // Act
+        String result = selectedInternshipDetailsService.updateSelectedInternshipDetails(selectedInternshipDetailsDTO);
+
+        // Assert
+        verify(selectedInternshipDetailsRepo).save(selectedInternshipDetails);
+        assertEquals("SC123 updated successfully", result);
+    }
+
+    @Test
+    public void testUpdateSelectedInternshipDetails_NotFound() {
+        // Arrange
+        when(selectedInternshipDetailsRepo.existsById(selectedInternshipDetailsDTO.getSelection_id())).thenReturn(false);
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            selectedInternshipDetailsService.updateSelectedInternshipDetails(selectedInternshipDetailsDTO);
+        });
+
+        assertEquals("SelectedInternshipDetails not found", exception.getMessage());
+        verify(selectedInternshipDetailsRepo, never()).save(any());
+    }
+}
